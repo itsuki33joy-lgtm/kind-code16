@@ -1,1 +1,171 @@
-const app=document.getElementById("app");let current=0,answers=[],mode="animals";const choices=[{label:"全くそう思わない",point:-2,star:"★"},{label:"あまりそう思わない",point:-1,star:"★★"},{label:"どちらともいえない",point:0,star:"★★★"},{label:"少しそう思う",point:1,star:"★★★★"},{label:"とてもそう思う",point:2,star:"★★★★★"}];const typeMap=Object.fromEntries(TYPES.map(c=>[c.code,c]));function setTheme(t){document.documentElement.style.setProperty("--primary",t.colors[0]);document.documentElement.style.setProperty("--secondary",t.colors[1]);document.documentElement.style.setProperty("--accent",t.colors[2])}function home(){current=0;answers=[];document.documentElement.style.setProperty("--primary","#8DBF63");document.documentElement.style.setProperty("--secondary","#EAF6DE");document.documentElement.style.setProperty("--accent","#557A3E");app.innerHTML=`<div class="inner"><p class="lab-label">KIND研究室 観察記録</p><div class="stamp">No.016</div><h1>KIND<br>CODE16</h1><p class="catch">優しさは、<br>ちゃんとその人の中にある。</p><div class="sketch-box"><div class="sketch-mini creature-mini">☁️</div><div class="sketch-mini animal-mini">🦌</div><p class="memo">観察メモ：<br>学校生活の中には、まだ名前のついていない優しさがある。</p></div><p class="intro">16個の観察記録から、あなたの優しさのカタチを見つけます。</p><div class="note">正解・不正解はありません。<br>いつものあなたに近いものを選んでください。</div><button class="main-btn" onclick="start()">診断をはじめる</button><button class="sub-btn" onclick="list('animals')">図鑑を見る</button></div>`}function start(){current=0;answers=[];question()}function question(){const q=QUESTIONS[current],percent=Math.round(current/QUESTIONS.length*100);app.innerHTML=`<div class="inner"><p class="lab-label">KIND研究室 観察記録</p><div class="progress-area"><div class="progress-text"><span>観察記録 ${current+1}/16</span><span>${percent}%</span></div><div class="progress"><div class="progress-bar" style="width:${percent}%"></div></div></div><div class="q-card"><div class="q-title">Observation No.${String(current+1).padStart(2,"0")}</div><p class="question">${q.text}</p></div><div class="choices">${choices.map((c,i)=>`<button class="choice" onclick="answer(${i})"><span class="stars">${c.star}</span>${c.label}</button>`).join("")}</div><div class="nav-row"><button class="sub-btn" onclick="${current===0?"home()":"back()"}">戻る</button></div></div>`}function answer(i){answers[current]={axis:QUESTIONS[current].axis,point:choices[i].point};current<QUESTIONS.length-1?(current++,question()):result()}function back(){current>0&&(current--,question())}function result(){const s={E:0,S:0,H:0,V:0,D:0,P:0,U:0,B:0},opp={E:"S",S:"E",H:"V",V:"H",D:"P",P:"D",U:"B",B:"U"};answers.forEach(a=>{a.point>=0?s[a.axis]+=a.point:s[opp[a.axis]]+=Math.abs(a.point)});let code="";code+=s.E>=s.S?"E":"S";code+=s.H>=s.V?"H":"V";code+=s.D>=s.P?"D":"P";code+=s.U>=s.B?"U":"B";typeMap[code]||(code=nearestType(code));const t=typeMap[code];setTheme(t);const rn=["調和","共感","行動","成長","見守り"];app.innerHTML=`<div class="inner"><p class="lab-label">KIND研究室 診断結果</p><div class="stamp">${code}</div><section class="result-cover"><div class="code">KIND CODE / ${code}</div><div class="result-name">${t.emoji} ${t.animal}</div><p class="result-line">${t.line}</p></section><div class="result-grid">${sketchBlock(t)}<div class="info-card"><h3>心の中の生命体</h3><span class="creature-name">${t.creature}</span><p>${CREATURE_LINES[t.creature]}</p></div><div class="info-card"><h3>Field Note</h3><p>${t.field}</p></div><div class="info-card"><h3>研究員メモ</h3><p>${t.memo}</p></div><div class="info-card"><h3>あなたの優しさレーダー</h3>${t.radar.map((v,i)=>`<div class="radar-row"><span>${rn[i]}</span><div class="radar-bar"><span style="width:${20*v}%"></span></div></div>`).join("")}</div><div class="info-card"><h3>研究レベル</h3><p>${t.rare}</p></div><div class="info-card"><h3>テーマカラー</h3><p>${t.theme}</p><div class="color-row">${t.colors.map(c=>`<div class="swatch" style="background:${c}"></div>`).join("")}</div></div><div class="info-card"><h3>相性</h3><div class="compat-list">${t.compat.map((c,i)=>`<div class="compat-item">${["🥇","🥈","🥉"][i]} ${c}</div>`).join("")}</div></div></div><button class="main-btn" onclick="list('animals')">図鑑を見る</button><button class="sub-btn" onclick="home()">トップへ戻る</button></div>`}function nearestType(code){let best="EHDU",bs=-1;Object.keys(typeMap).forEach(t=>{let n=0;for(let i=0;i<4;i++)t[i]===code[i]&&n++;n>bs&&(bs=n,best=t)});return best}function list(kind=mode){mode=kind;const data=kind==="animals"?TYPES:TYPES.map(t=>({code:t.code,emoji:"🌱",animal:t.creature,creature:t.animal,line:CREATURE_LINES[t.creature],rare:t.rare,theme:t.theme,colors:t.colors,features:"心の中で育つ優しさの種。",field:t.field,memo:t.memo}));app.innerHTML=`<div class="inner"><p class="lab-label">KIND研究室 図鑑資料</p><h1>KIND図鑑</h1><p class="lead">動物は「外に現れる優しさ」。<br>不思議生命体は「心の中で育つ優しさの種」。</p><div class="tabs"><button class="tab ${kind==="animals"?"active":""}" onclick="list('animals')">動物図鑑</button><button class="tab ${kind==="creatures"?"active":""}" onclick="list('creatures')">生命体図鑑</button></div><div class="grid">${data.map((it,i)=>`<article class="card" onclick="detail('${kind}',${i})"><div class="emoji">${kind==="animals"?it.emoji:"🌱"}</div><div class="code">${it.code}</div><div class="name">${kind==="animals"?it.animal:it.animal}</div><div class="pair">${kind==="animals"?"心の中："+it.creature:"対応："+it.creature}</div></article>`).join("")}</div><button class="sub-btn" onclick="home()">トップへ戻る</button></div>`}function detail(kind,i){const data=kind==="animals"?TYPES:TYPES.map(t=>({code:t.code,emoji:"🌱",animal:t.creature,creature:t.animal,line:CREATURE_LINES[t.creature],rare:t.rare,theme:t.theme,colors:t.colors,features:"心の中で育つ優しさの種。",field:t.field,memo:t.memo,item:"こころのしるし"}));const it=data[i];setTheme(it);app.innerHTML=`<div class="inner"><button class="back" onclick="list('${kind}')">← 図鑑へ戻る</button><section class="detail-head"><div class="code">KIND CODE / ${it.code}</div><div class="detail-title">${kind==="animals"?it.emoji:"🌱"} ${it.animal}</div><p class="detail-line">${it.line}</p></section>${sketchBlock(it,kind)}<section class="info"><h3>${kind==="animals"?"対応する不思議生命体":"対応する動物"}</h3><p>${it.creature}</p></section><section class="info"><h3>特徴</h3><p>${it.features}</p></section><section class="info"><h3>研究レベル</h3><p>${it.rare}</p></section><section class="info"><h3>テーマカラー</h3><p>${it.theme}</p><div class="color-row">${it.colors.map(c=>`<div class="swatch" style="background:${c}"></div>`).join("")}</div></section><section class="info"><h3>Field Note</h3><p>${it.field}</p></section><section class="info"><h3>研究員メモ</h3><p>${it.memo}</p></section></div>`}function sketchBlock(t,kind="animals"){return`<div class="sketch"><span class="sketch-label one">${kind==="creatures"?"発見時の姿":"外見メモ"}</span><span class="sketch-label two">${kind==="animals"?t.creature:t.creature}</span><span class="sketch-label three">${t.theme}</span><div class="sketch-emoji">${kind==="creatures"?"🌱":t.emoji}</div><p class="sketch-note">色鉛筆スケッチ風の観察記録。<br>KIND研究室の下描きとして表示しています。</p></div>`}const leaves=["🍃","🌿","☘️"];function makeLeaf(){const l=document.createElement("div");l.className="leaf";l.textContent=leaves[Math.floor(Math.random()*leaves.length)];l.style.left=100*Math.random()+"vw";l.style.animationDuration=4+4*Math.random()+"s";l.style.fontSize=14+10*Math.random()+"px";document.body.appendChild(l);setTimeout(()=>l.remove(),8e3)}setInterval(makeLeaf,1400);home();
+
+const app = document.getElementById("app");
+let answers = [];
+let current = 0;
+let mode = "animals";
+
+const all = [...ANIMALS, ...CREATURES];
+const typeMap = Object.fromEntries(ANIMALS.map(a=>[a.code,a]));
+
+function page(content){
+  app.innerHTML = `<section class="page"><div class="inner">${content}</div></section>`;
+}
+
+function home(){
+  page(`
+    <div class="header">
+      <div class="kicker">いい人すぎるよ展｜KIND研究室</div>
+      <h1>KIND<br>CODE16</h1>
+      <div class="catch">優しさから生まれた、<br>32の仲間たち。</div>
+    </div>
+    <div class="hero-grid">
+      <div class="hero-card"><div class="big">🦌</div><b>動物たち16</b><span>外に現れる優しさ</span></div>
+      <div class="hero-card"><div class="big">☁️</div><b>不思議生命体16</b><span>心の中で育つ優しさ</span></div>
+    </div>
+    <div class="note">
+      16問の観察記録に答えると、あなたの優しさのタイプが見つかります。<br>
+      図鑑では32キャラ全員を見ることができます。
+    </div>
+    <button class="main" onclick="start()">診断をはじめる</button>
+    <button onclick="showZukan('animals')">32キャラ図鑑を見る</button>
+  `);
+}
+
+function showZukan(kind){
+  mode = kind;
+  const data = kind === "animals" ? ANIMALS : CREATURES;
+  page(`
+    <button class="back" onclick="home()">← トップへ戻る</button>
+    <div class="header">
+      <div class="kicker">KIND研究室 観察図鑑</div>
+      <h1>32キャラ<br>図鑑</h1>
+    </div>
+    <div class="tabs">
+      <button class="tab ${kind==="animals"?"active":""}" onclick="showZukan('animals')">動物16</button>
+      <button class="tab ${kind==="creatures"?"active":""}" onclick="showZukan('creatures')">生命体16</button>
+    </div>
+    <div class="grid">
+      ${data.map((x,i)=>card(x,kind,i)).join("")}
+    </div>
+  `);
+}
+
+function card(x,kind,i){
+  return `
+    <article class="card" style="--c:${x.color};--s:${x.sub}" onclick="detail('${kind}',${i})">
+      <div class="no">${String(x.no).padStart(2,"0")}｜${x.code}</div>
+      <div class="char">${x.emoji}</div>
+      <h3>${x.name}</h3>
+      <p>${x.title}<br>関連：${x.partner}</p>
+    </article>
+  `;
+}
+
+function detail(kind,i){
+  const x = kind === "animals" ? ANIMALS[i] : CREATURES[i];
+  page(`
+    <button class="back" onclick="showZukan('${kind}')">← 図鑑へ戻る</button>
+    <section class="detail-head" style="--c:${x.color};--s:${x.sub}">
+      <div class="no">研究記録 No.${String(x.no).padStart(2,"0")}｜${x.code}</div>
+      <div class="detail-title">${x.emoji} ${x.name}</div>
+      <div class="subline">${x.title}<br>${x.line}</div>
+    </section>
+    ${sheet(x,kind)}
+    <button onclick="showZukan('${kind === "animals" ? "creatures" : "animals"}')">対応する${kind === "animals" ? "生命体" : "動物"}を見る</button>
+  `);
+}
+
+function sheet(x,kind){
+  return `
+    <section class="sheet" style="--c:${x.color};--s:${x.sub}">
+      <div class="sheet-title">観察スケッチ・図鑑記録</div>
+      <div class="pose">
+        <div>${x.emoji}<small>正面</small></div>
+        <div>${x.emoji}<small>横向き</small></div>
+        <div>${x.emoji}<small>休む姿</small></div>
+      </div>
+      <div class="info"><h4>テーマカラー</h4><div class="colors"><span class="swatch" style="background:${x.color}"></span><span class="swatch" style="background:${x.sub}"></span><span class="swatch" style="background:${x.accent}"></span></div></div>
+      <div class="info"><h4>研究レベル</h4><p>${x.rare}</p></div>
+      <div class="info"><h4>身につけているもの</h4><p>${x.item}</p></div>
+      <div class="info"><h4>好きなもの</h4><ul>${x.likes.map(v=>`<li>${v}</li>`).join("")}</ul></div>
+      <div class="info"><h4>Field Note</h4><p>${x.field}</p></div>
+      <div class="info"><h4>研究員メモ</h4><p>${x.memo}</p></div>
+      <div class="info"><h4>生態メモ 未解明なこと</h4><p>${x.mystery}</p></div>
+      <div class="info"><h4>つながりがある仲間</h4><p>${x.partner}</p></div>
+    </section>
+  `;
+}
+
+const choices = [
+  ["★", -2, "全くそう思わない"],
+  ["★★", -1, "あまりそう思わない"],
+  ["★★★", 0, "どちらともいえない"],
+  ["★★★★", 1, "少しそう思う"],
+  ["★★★★★", 2, "とてもそう思う"]
+];
+
+function start(){
+  answers = [];
+  current = 0;
+  question();
+}
+
+function question(){
+  const q = QUESTIONS[current];
+  const p = Math.round(current / QUESTIONS.length * 100);
+  page(`
+    <button class="back" onclick="${current===0 ? "home()" : "prevQ()"}">← 戻る</button>
+    <div class="kicker">観察記録 ${current+1}/16</div>
+    <div class="progress"><div class="bar" style="width:${p}%"></div></div>
+    <div class="qcard">
+      <div class="qtext">${q.text}</div>
+      ${choices.map((c,idx)=>`<button class="choice" onclick="answer(${idx})"><span class="stars">${c[0]}</span>${c[2]}</button>`).join("")}
+    </div>
+  `);
+}
+
+function answer(idx){
+  answers[current] = {axis:QUESTIONS[current].axis, point:choices[idx][1]};
+  if(current < QUESTIONS.length-1){ current++; question(); }
+  else result();
+}
+
+function prevQ(){
+  if(current>0){current--;question();}
+}
+
+function result(){
+  const score = {E:0,S:0,H:0,V:0,D:0,P:0,U:0,B:0};
+  const opp = {E:"S",S:"E",H:"V",V:"H",D:"P",P:"D",U:"B",B:"U"};
+  answers.forEach(a=>{
+    if(a.point>=0) score[a.axis]+=a.point;
+    else score[opp[a.axis]]+=Math.abs(a.point);
+  });
+  let code = "";
+  code += score.E >= score.S ? "E" : "S";
+  code += score.H >= score.V ? "H" : "V";
+  code += score.D >= score.P ? "D" : "P";
+  code += score.U >= score.B ? "U" : "B";
+  let x = typeMap[code] || ANIMALS[0];
+  const c = CREATURES.find(v=>v.name===x.partner);
+  page(`
+    <div class="header">
+      <div class="kicker">診断結果</div>
+      <h1>${x.code}</h1>
+    </div>
+    <section class="detail-head" style="--c:${x.color};--s:${x.sub}">
+      <div class="detail-title">${x.emoji} ${x.name}</div>
+      <div class="subline">${x.title}<br>${x.line}</div>
+    </section>
+    ${sheet(x,"animals")}
+    <section class="detail-head" style="--c:${c.color};--s:${c.sub};margin-top:16px">
+      <div class="no">心の中の不思議生命体</div>
+      <div class="detail-title">${c.emoji} ${c.name}</div>
+      <div class="subline">${c.title}<br>${c.line}</div>
+    </section>
+    <button class="main" onclick="home()">トップへ戻る</button>
+    <button onclick="showZukan('animals')">図鑑を見る</button>
+  `);
+}
+
+home();
