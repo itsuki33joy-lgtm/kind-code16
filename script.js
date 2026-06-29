@@ -1,171 +1,51 @@
 
-const app = document.getElementById("app");
-let answers = [];
-let current = 0;
-let mode = "animals";
-
-const all = [...ANIMALS, ...CREATURES];
-const typeMap = Object.fromEntries(ANIMALS.map(a=>[a.code,a]));
-
-function page(content){
-  app.innerHTML = `<section class="page"><div class="inner">${content}</div></section>`;
+const app=document.getElementById("app");let current=0,answers=[],mode="animals";
+const typeMap=Object.fromEntries(ANIMALS.map(x=>[x.code,x]));
+function page(html){app.innerHTML=`<section class="page"><div class="inner">${html}</div></section>`}
+function svgBase(inner,c,s,variant="front"){return `<svg class="illust" viewBox="0 0 160 160" style="--fill:${c};--soft:${s}" aria-hidden="true"><defs><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale=".55"/></filter></defs>${inner}<path class="line" d="M28 135c27 8 75 8 104 0" opacity=".25"/></svg>`}
+function draw(x,variant="front"){const c=x.color,s=x.sub,k=x.shape;let b="";
+ if(k==="deer")b=`<ellipse class="sketch" cx="80" cy="90" rx="34" ry="38"/><circle class="soft" cx="80" cy="70" r="26"/><path class="line" d="M55 56l-15-16M105 56l15-16M65 45l-7-24M95 45l7-24M58 32l-12-8M102 32l12-8"/><circle class="dark" cx="70" cy="69" r="3"/><circle class="dark" cx="90" cy="69" r="3"/><path class="line" d="M74 82q6 5 12 0"/><path class="line" d="M58 100l-10 29M102 100l10 29"/><path class="line" d="M64 109l-2 28M96 109l2 28"/>`;
+ else if(k==="otter")b=`<ellipse class="sketch" cx="82" cy="89" rx="37" ry="43"/><circle class="soft" cx="80" cy="62" r="26"/><circle class="dark" cx="71" cy="62" r="3"/><circle class="dark" cx="89" cy="62" r="3"/><path class="line" d="M73 75q8 6 16 0"/><path class="line" d="M105 104q26 15 31 0"/><circle class="line" cx="79" cy="101" r="14"/><path class="line" d="M50 105q-12 12-4 24M110 105q12 12 4 24"/>`;
+ else if(k==="fox")b=`<path class="sketch" d="M55 78L42 38l31 20h14l31-20-13 40q13 16 5 38t-31 23q-23-1-31-23t7-38z"/><circle class="dark" cx="70" cy="82" r="3"/><circle class="dark" cx="90" cy="82" r="3"/><path class="line" d="M75 96q5 5 12 0M104 111q28 0 22 22q-19 6-32-9"/><path class="line" d="M58 116l-10 24M102 116l10 24"/>`;
+ else if(k==="beaver")b=`<ellipse class="sketch" cx="80" cy="88" rx="36" ry="40"/><circle class="soft" cx="80" cy="60" r="25"/><circle class="dark" cx="71" cy="60" r="3"/><circle class="dark" cx="89" cy="60" r="3"/><path class="line" d="M74 73h12M110 105l28 20l-30 13"/><path class="line" d="M56 105l-13 26M104 105l13 26"/>`;
+ else if(k==="dolphin")b=`<path class="sketch" d="M38 92q34-42 86-20q-24 12-17 38q-40 14-69-18z"/><path class="line" d="M99 73l17-26M65 105l-18 26M105 97l29 10"/><circle class="dark" cx="65" cy="78" r="3"/>`;
+ else if(k==="shiba")b=`<ellipse class="sketch" cx="80" cy="93" rx="35" ry="39"/><path class="soft" d="M55 70l-13-27l30 17h18l30-17l-14 27q11 12 7 30q-5 26-33 28q-28-2-33-28q-3-18 8-30z"/><circle class="dark" cx="70" cy="78" r="3"/><circle class="dark" cx="91" cy="78" r="3"/><path class="line" d="M75 93q6 5 13 0M108 100q28 4 16 28"/><path class="line" d="M58 115l-8 24M102 115l8 24"/>`;
+ else if(k==="owl")b=`<ellipse class="sketch" cx="80" cy="87" rx="38" ry="48"/><path class="line" d="M49 55q31-25 62 0"/><circle class="soft" cx="67" cy="77" r="15"/><circle class="soft" cx="93" cy="77" r="15"/><circle class="dark" cx="67" cy="77" r="4"/><circle class="dark" cx="93" cy="77" r="4"/><path class="line" d="M80 84l-7 9h14zM58 122l-13 16M102 122l13 16"/>`;
+ else if(k==="rabbit")b=`<ellipse class="sketch" cx="80" cy="96" rx="36" ry="36"/><circle class="soft" cx="80" cy="68" r="25"/><path class="line" d="M62 50q-9-35 8-40q16 15 9 40M94 50q2-36 20-34q10 22-6 42"/><circle class="dark" cx="71" cy="69" r="3"/><circle class="dark" cx="90" cy="69" r="3"/><path class="line" d="M75 82q6 5 12 0"/>`;
+ else if(k==="swan")b=`<path class="sketch" d="M58 113q43 22 73-9q-41-7-49-43q-4-20 14-31q-35 7-25 40q-33 6-45 29q10 10 32 14z"/><circle class="dark" cx="95" cy="39" r="3"/><path class="line" d="M102 42l18-5M53 103q17 8 39 3"/>`;
+ else if(k==="koala")b=`<ellipse class="sketch" cx="80" cy="91" rx="38" ry="42"/><circle class="soft" cx="54" cy="58" r="18"/><circle class="soft" cx="106" cy="58" r="18"/><circle class="soft" cx="80" cy="65" r="28"/><ellipse class="dark" cx="80" cy="73" rx="8" ry="10"/><circle class="dark" cx="69" cy="65" r="3"/><circle class="dark" cx="91" cy="65" r="3"/><path class="line" d="M73 88q7 5 15 0"/>`;
+ else if(k==="wolf")b=`<path class="sketch" d="M54 83L42 37l32 23h15l31-23l-11 46q10 14 6 33q-7 28-35 29q-28-1-35-29q-4-19 9-33z"/><circle class="dark" cx="70" cy="81" r="3"/><circle class="dark" cx="91" cy="81" r="3"/><path class="line" d="M72 98q8 5 17 0M107 112q20 4 26 22"/>`;
+ else if(k==="hedgehog")b=`<path class="sketch" d="M40 102q10-42 45-51q30 3 38 38q-8 41-48 45q-28-2-35-32z"/><path class="line" d="M43 92l-15-12M49 78l-12-16M62 66l-5-20M80 60v-20M98 67l11-19M113 81l17-10"/><circle class="dark" cx="79" cy="91" r="3"/><circle class="dark" cx="97" cy="91" r="3"/><path class="line" d="M84 105q6 4 13 0"/>`;
+ else if(k==="squirrel")b=`<ellipse class="sketch" cx="73" cy="94" rx="32" ry="38"/><circle class="soft" cx="76" cy="63" r="23"/><path class="line" d="M104 102q41-35 9-62q-21 13-8 42q16 7 11 31"/><circle class="dark" cx="68" cy="64" r="3"/><circle class="dark" cx="85" cy="64" r="3"/><path class="line" d="M72 78q6 4 13 0"/>`;
+ else if(k==="elephant")b=`<ellipse class="sketch" cx="83" cy="91" rx="40" ry="42"/><circle class="soft" cx="51" cy="68" r="23"/><circle class="soft" cx="112" cy="68" r="23"/><path class="line" d="M83 76q-3 33 13 45q-10 14-23 2"/><circle class="dark" cx="70" cy="70" r="3"/><circle class="dark" cx="95" cy="70" r="3"/><path class="line" d="M61 118l-9 22M104 118l9 22"/>`;
+ else if(k==="turtle")b=`<ellipse class="sketch" cx="80" cy="96" rx="43" ry="35"/><circle class="soft" cx="119" cy="91" r="17"/><path class="line" d="M45 86q34-23 70 0M52 104q29 13 60 0M80 63v65M55 121l-15 13M105 121l15 13"/><circle class="dark" cx="123" cy="88" r="3"/>`;
+ else if(k==="whale")b=`<path class="sketch" d="M30 98q34-53 100-24q-16 10-8 27q-38 31-92-3z"/><path class="line" d="M119 79l24-20M120 92l28 11M56 92q25 10 53 0"/><circle class="dark" cx="58" cy="79" r="3"/>`;
+ else b=drawCreature(x);
+ return svgBase(b,c,s,variant);
 }
-
-function home(){
-  page(`
-    <div class="header">
-      <div class="kicker">いい人すぎるよ展｜KIND研究室</div>
-      <h1>KIND<br>CODE16</h1>
-      <div class="catch">優しさから生まれた、<br>32の仲間たち。</div>
-    </div>
-    <div class="hero-grid">
-      <div class="hero-card"><div class="big">🦌</div><b>動物たち16</b><span>外に現れる優しさ</span></div>
-      <div class="hero-card"><div class="big">☁️</div><b>不思議生命体16</b><span>心の中で育つ優しさ</span></div>
-    </div>
-    <div class="note">
-      16問の観察記録に答えると、あなたの優しさのタイプが見つかります。<br>
-      図鑑では32キャラ全員を見ることができます。
-    </div>
-    <button class="main" onclick="start()">診断をはじめる</button>
-    <button onclick="showZukan('animals')">32キャラ図鑑を見る</button>
-  `);
+function drawCreature(x){const k=x.shape;let b="";
+ if(k==="mowarin")b=`<path class="sketch" d="M45 100q-13-23 13-38q17-31 44-3q33 3 23 38q-2 35-41 31q-38 5-39-28z"/><path class="line" d="M80 58v-30M80 28q8-12 19-8M80 28q-9-11-20-5"/><circle class="dark" cx="70" cy="91" r="3"/><circle class="dark" cx="91" cy="91" r="3"/><path class="line" d="M75 103q7 5 14 0"/>`;
+ else if(k==="podol")b=`<path class="sketch" d="M80 22q42 54 28 87q-11 28-45 20q-29-10-21-40q6-25 38-67z"/><circle class="dark" cx="70" cy="88" r="3"/><circle class="dark" cx="90" cy="88" r="3"/><path class="line" d="M75 101q6 5 12 0"/>`;
+ else if(k==="pikariru")b=`<circle class="sketch" cx="80" cy="84" r="35"/><path class="line" d="M80 23v-18M80 145v-18M19 84H2M158 84h-18M37 41L25 29M123 41l13-13M37 126l-13 13M123 126l13 13"/><circle class="dark" cx="70" cy="82" r="3"/><circle class="dark" cx="91" cy="82" r="3"/><path class="line" d="M74 97q7 5 15 0"/>`;
+ else if(k==="tsukumon")b=`<ellipse class="sketch" cx="80" cy="92" rx="37" ry="42"/><path class="line" d="M58 55L48 23M101 55l12-31M56 58q-16-15-22-2M104 58q16-15 22-2"/><circle class="dark" cx="70" cy="86" r="3"/><circle class="dark" cx="91" cy="86" r="3"/><path class="line" d="M75 100q6 4 12 0"/>`;
+ else if(k==="chirami")b=`<ellipse class="sketch" cx="80" cy="100" rx="35" ry="34"/><path class="line" d="M59 74q-24-50-5-63q21 19 20 60M96 74q7-54 31-57q14 28-13 62"/><circle class="dark" cx="70" cy="96" r="3"/><circle class="dark" cx="91" cy="96" r="3"/><path class="line" d="M75 108q6 4 12 0"/>`;
+ else if(k==="wakkan")b=`<circle class="sketch" cx="80" cy="82" r="42"/><circle class="soft" cx="80" cy="82" r="24"/><ellipse class="sketch" cx="80" cy="119" rx="29" ry="22"/><circle class="dark" cx="70" cy="112" r="3"/><circle class="dark" cx="91" cy="112" r="3"/>`;
+ else if(k==="garun")b=`<rect class="sketch" x="45" y="52" width="70" height="76" rx="16"/><path class="line" d="M60 52V22M100 52V22"/><circle class="dark" cx="69" cy="87" r="3"/><circle class="dark" cx="91" cy="87" r="3"/><path class="line" d="M73 102q7 5 15 0"/>`;
+ else if(k==="dosshi")b=`<path class="sketch" d="M38 112q8-58 47-66q33 7 39 64q-15 22-46 22q-27 0-40-20z"/><circle class="dark" cx="70" cy="95" r="3"/><circle class="dark" cx="91" cy="95" r="3"/><path class="line" d="M75 108q6 4 12 0"/>`;
+ else if(k==="fuwakuru")b=`<path class="sketch" d="M44 120q-11-58 18-79q22-16 44 0q29 21 18 79q-42 25-80 0z"/><circle class="dark" cx="80" cy="83" r="24"/><circle class="soft" cx="71" cy="80" r="3"/><circle class="soft" cx="91" cy="80" r="3"/>`;
+ else if(k==="poyon")b=`<path class="sketch" d="M43 110q2-51 37-64q35 13 37 64q-18 27-74 0z"/><path class="line" d="M80 45V23M80 23q8 5 13 0"/><circle class="dark" cx="70" cy="91" r="3"/><circle class="dark" cx="91" cy="91" r="3"/><path class="line" d="M75 104q6 4 12 0"/>`;
+ else if(k==="pokante")b=`<circle class="sketch" cx="80" cy="85" r="40"/><path class="line" d="M80 24V6M80 164v-18M20 85H2M158 85h-18M50 52L36 37M110 52l14-15"/><circle class="dark" cx="69" cy="86" r="3"/><circle class="dark" cx="91" cy="86" r="3"/><path class="line" d="M70 103q10 6 21 0"/>`;
+ else if(k==="mokumu")b=`<path class="sketch" d="M48 128q4-59 12-80q20-10 41 0q9 28 12 80q-25 16-65 0z"/><path class="line" d="M80 46V18M80 18q12-13 26-5M80 18q-10-12-23-6"/><circle class="dark" cx="70" cy="87" r="3"/><circle class="dark" cx="91" cy="87" r="3"/><path class="line" d="M75 100q7 5 15 0"/>`;
+ else if(k==="chikuru")b=`<path class="sketch" d="M39 112q8-55 42-67q34 14 41 67q-30 25-83 0z"/><path class="line" d="M45 75l-18-12M57 59l-12-20M80 49V22M103 59l13-20M117 75l18-12"/><circle class="dark" cx="70" cy="91" r="3"/><circle class="dark" cx="91" cy="91" r="3"/>`;
+ else if(k==="koroppi")b=`<ellipse class="sketch" cx="80" cy="96" rx="39" ry="33"/><path class="line" d="M60 65V38M100 65V38"/><circle class="soft" cx="60" cy="35" r="8"/><circle class="soft" cx="100" cy="35" r="8"/><circle class="dark" cx="70" cy="91" r="3"/><circle class="dark" cx="91" cy="91" r="3"/><path class="line" d="M42 101l-23-14M118 101l23-14"/>`;
+ else if(k==="noroa")b=`<ellipse class="sketch" cx="80" cy="94" rx="37" ry="39"/><path class="line" d="M50 60q30-34 60 0v18H50z"/><circle class="dark" cx="70" cy="90" r="3"/><circle class="dark" cx="91" cy="90" r="3"/><path class="line" d="M75 103q7 5 14 0"/>`;
+ else b=`<path class="sketch" d="M78 22q37 42 39 83q-4 37-48 32q-27-3-31-29q5-39 40-86z"/><path class="line" d="M67 113q12 11 28 0M80 42l10 20l20 3l-15 14l4 20l-19-10l-18 10l4-20l-15-14l20-3z"/><circle class="soft" cx="68" cy="96" r="3"/><circle class="soft" cx="93" cy="96" r="3"/>`;
+ return b;
 }
-
-function showZukan(kind){
-  mode = kind;
-  const data = kind === "animals" ? ANIMALS : CREATURES;
-  page(`
-    <button class="back" onclick="home()">← トップへ戻る</button>
-    <div class="header">
-      <div class="kicker">KIND研究室 観察図鑑</div>
-      <h1>32キャラ<br>図鑑</h1>
-    </div>
-    <div class="tabs">
-      <button class="tab ${kind==="animals"?"active":""}" onclick="showZukan('animals')">動物16</button>
-      <button class="tab ${kind==="creatures"?"active":""}" onclick="showZukan('creatures')">生命体16</button>
-    </div>
-    <div class="grid">
-      ${data.map((x,i)=>card(x,kind,i)).join("")}
-    </div>
-  `);
-}
-
-function card(x,kind,i){
-  return `
-    <article class="card" style="--c:${x.color};--s:${x.sub}" onclick="detail('${kind}',${i})">
-      <div class="no">${String(x.no).padStart(2,"0")}｜${x.code}</div>
-      <div class="char">${x.emoji}</div>
-      <h3>${x.name}</h3>
-      <p>${x.title}<br>関連：${x.partner}</p>
-    </article>
-  `;
-}
-
-function detail(kind,i){
-  const x = kind === "animals" ? ANIMALS[i] : CREATURES[i];
-  page(`
-    <button class="back" onclick="showZukan('${kind}')">← 図鑑へ戻る</button>
-    <section class="detail-head" style="--c:${x.color};--s:${x.sub}">
-      <div class="no">研究記録 No.${String(x.no).padStart(2,"0")}｜${x.code}</div>
-      <div class="detail-title">${x.emoji} ${x.name}</div>
-      <div class="subline">${x.title}<br>${x.line}</div>
-    </section>
-    ${sheet(x,kind)}
-    <button onclick="showZukan('${kind === "animals" ? "creatures" : "animals"}')">対応する${kind === "animals" ? "生命体" : "動物"}を見る</button>
-  `);
-}
-
-function sheet(x,kind){
-  return `
-    <section class="sheet" style="--c:${x.color};--s:${x.sub}">
-      <div class="sheet-title">観察スケッチ・図鑑記録</div>
-      <div class="pose">
-        <div>${x.emoji}<small>正面</small></div>
-        <div>${x.emoji}<small>横向き</small></div>
-        <div>${x.emoji}<small>休む姿</small></div>
-      </div>
-      <div class="info"><h4>テーマカラー</h4><div class="colors"><span class="swatch" style="background:${x.color}"></span><span class="swatch" style="background:${x.sub}"></span><span class="swatch" style="background:${x.accent}"></span></div></div>
-      <div class="info"><h4>研究レベル</h4><p>${x.rare}</p></div>
-      <div class="info"><h4>身につけているもの</h4><p>${x.item}</p></div>
-      <div class="info"><h4>好きなもの</h4><ul>${x.likes.map(v=>`<li>${v}</li>`).join("")}</ul></div>
-      <div class="info"><h4>Field Note</h4><p>${x.field}</p></div>
-      <div class="info"><h4>研究員メモ</h4><p>${x.memo}</p></div>
-      <div class="info"><h4>生態メモ 未解明なこと</h4><p>${x.mystery}</p></div>
-      <div class="info"><h4>つながりがある仲間</h4><p>${x.partner}</p></div>
-    </section>
-  `;
-}
-
-const choices = [
-  ["★", -2, "全くそう思わない"],
-  ["★★", -1, "あまりそう思わない"],
-  ["★★★", 0, "どちらともいえない"],
-  ["★★★★", 1, "少しそう思う"],
-  ["★★★★★", 2, "とてもそう思う"]
-];
-
-function start(){
-  answers = [];
-  current = 0;
-  question();
-}
-
-function question(){
-  const q = QUESTIONS[current];
-  const p = Math.round(current / QUESTIONS.length * 100);
-  page(`
-    <button class="back" onclick="${current===0 ? "home()" : "prevQ()"}">← 戻る</button>
-    <div class="kicker">観察記録 ${current+1}/16</div>
-    <div class="progress"><div class="bar" style="width:${p}%"></div></div>
-    <div class="qcard">
-      <div class="qtext">${q.text}</div>
-      ${choices.map((c,idx)=>`<button class="choice" onclick="answer(${idx})"><span class="stars">${c[0]}</span>${c[2]}</button>`).join("")}
-    </div>
-  `);
-}
-
-function answer(idx){
-  answers[current] = {axis:QUESTIONS[current].axis, point:choices[idx][1]};
-  if(current < QUESTIONS.length-1){ current++; question(); }
-  else result();
-}
-
-function prevQ(){
-  if(current>0){current--;question();}
-}
-
-function result(){
-  const score = {E:0,S:0,H:0,V:0,D:0,P:0,U:0,B:0};
-  const opp = {E:"S",S:"E",H:"V",V:"H",D:"P",P:"D",U:"B",B:"U"};
-  answers.forEach(a=>{
-    if(a.point>=0) score[a.axis]+=a.point;
-    else score[opp[a.axis]]+=Math.abs(a.point);
-  });
-  let code = "";
-  code += score.E >= score.S ? "E" : "S";
-  code += score.H >= score.V ? "H" : "V";
-  code += score.D >= score.P ? "D" : "P";
-  code += score.U >= score.B ? "U" : "B";
-  let x = typeMap[code] || ANIMALS[0];
-  const c = CREATURES.find(v=>v.name===x.partner);
-  page(`
-    <div class="header">
-      <div class="kicker">診断結果</div>
-      <h1>${x.code}</h1>
-    </div>
-    <section class="detail-head" style="--c:${x.color};--s:${x.sub}">
-      <div class="detail-title">${x.emoji} ${x.name}</div>
-      <div class="subline">${x.title}<br>${x.line}</div>
-    </section>
-    ${sheet(x,"animals")}
-    <section class="detail-head" style="--c:${c.color};--s:${c.sub};margin-top:16px">
-      <div class="no">心の中の不思議生命体</div>
-      <div class="detail-title">${c.emoji} ${c.name}</div>
-      <div class="subline">${c.title}<br>${c.line}</div>
-    </section>
-    <button class="main" onclick="home()">トップへ戻る</button>
-    <button onclick="showZukan('animals')">図鑑を見る</button>
-  `);
-}
-
+function home(){page(`<div class="center"><div class="kicker">いい人すぎるよ展｜KIND研究室</div><h1>KIND<br>CODE16</h1><p class="catch">優しさから生まれた、<br>32の仲間たち。</p></div><div class="grid"><div class="card" style="--sub:#EAF6DE">${draw(ANIMALS[0])}<h3>動物たち16</h3><p>外に現れる優しさ</p></div><div class="card" style="--sub:#FAF8E9">${draw(CREATURES[0])}<h3>不思議生命体16</h3><p>心の中で育つ優しさ</p></div></div><div class="note">16問に答えると、あなたの優しさのタイプが見つかります。図鑑では32キャラ全員を見ることができます。</div><button class="main" onclick="start()">診断をはじめる</button><button onclick="showZukan('animals')">32キャラ図鑑を見る</button>`)}
+function showZukan(kind){const data=kind==="animals"?ANIMALS:CREATURES;page(`<button class="back" onclick="home()">← トップへ戻る</button><div class="center"><div class="kicker">KIND研究室 観察図鑑</div><h1>32キャラ<br>図鑑</h1></div><div class="tabs"><button class="tab ${kind==="animals"?"active":""}" onclick="showZukan('animals')">動物16</button><button class="tab ${kind==="creatures"?"active":""}" onclick="showZukan('creatures')">生命体16</button></div><div class="grid">${data.map((x,i)=>`<article class="card" style="--sub:${x.sub}" onclick="detail('${kind}',${i})"><div class="no">${String(x.no).padStart(2,"0")}｜${x.code}</div>${draw(x)}<h3>${x.name}</h3><p>${x.title}<br>関連：${x.partner}</p></article>`).join("")}</div>`)}
+function detail(kind,i){const x=(kind==="animals"?ANIMALS:CREATURES)[i];page(`<button class="back" onclick="showZukan('${kind}')">← 図鑑へ戻る</button><section class="detailHead" style="--c:${x.color};--sub:${x.sub}"><div class="no">研究記録 No.${String(x.no).padStart(2,"0")}｜${x.code}</div><div class="detailTitle">${x.name}</div><div class="subline">${x.title}<br>${x.line}</div></section>${sheet(x)}<button onclick="showZukan('${kind==="animals"?"creatures":"animals"}')">対応する${kind==="animals"?"生命体":"動物"}を見る</button>`)}
+function sheet(x){return `<section class="sheet" style="--c:${x.color};--sub:${x.sub}"><div class="sheetTitle">診断結果ページ用｜図鑑スケッチ・観察記録</div><div class="pose"><div class="poseBox">${draw(x)}<small>正面</small></div><div class="poseBox">${draw(x)}<small>横向き</small></div><div class="poseBox">${draw(x)}<small>休む姿</small></div></div><div class="info"><h4>テーマカラー</h4><div class="colors"><span class="swatch" style="background:${x.color}"></span><span class="swatch" style="background:${x.sub}"></span><span class="swatch" style="background:${x.accent}"></span></div></div><div class="info"><h4>研究レベル</h4><p>${x.rare}</p></div><div class="info"><h4>身につけているもの</h4><p>${x.item}</p></div><div class="info"><h4>好きなもの</h4><ul>${x.likes.map(v=>`<li>${v}</li>`).join("")}</ul></div><div class="info"><h4>Field Note</h4><p>${x.field}</p></div><div class="info"><h4>研究員メモ</h4><p>${x.memo}</p></div><div class="info"><h4>生態メモ 未解明なこと</h4><p>${x.mystery}</p></div><div class="info"><h4>つながりがある仲間</h4><p>${x.partner}</p></div></section>`}
+const choices=[["★",-2,"全くそう思わない"],["★★",-1,"あまりそう思わない"],["★★★",0,"どちらともいえない"],["★★★★",1,"少しそう思う"],["★★★★★",2,"とてもそう思う"]];
+function start(){answers=[];current=0;question()}function question(){const q=QUESTIONS[current],p=Math.round(current/QUESTIONS.length*100);page(`<button class="back" onclick="${current===0?"home()":"prevQ()"}">← 戻る</button><div class="kicker">観察記録 ${current+1}/16</div><div class="progress"><div class="bar" style="width:${p}%;--c:#8DBF63"></div></div><div class="qtext">${q.text}</div>${choices.map((c,i)=>`<button class="choice" onclick="answer(${i})"><span class="stars">${c[0]}</span>${c[2]}</button>`).join("")}`)}function answer(i){answers[current]={axis:QUESTIONS[current].axis,point:choices[i][1]};current<QUESTIONS.length-1?(current++,question()):result()}function prevQ(){if(current>0){current--;question()}}function result(){const s={E:0,S:0,H:0,V:0,D:0,P:0,U:0,B:0},opp={E:"S",S:"E",H:"V",V:"H",D:"P",P:"D",U:"B",B:"U"};answers.forEach(a=>{a.point>=0?s[a.axis]+=a.point:s[opp[a.axis]]+=Math.abs(a.point)});let code=(s.E>=s.S?"E":"S")+(s.H>=s.V?"H":"V")+(s.D>=s.P?"D":"P")+(s.U>=s.B?"U":"B");const x=typeMap[code]||ANIMALS[0],c=CREATURES.find(v=>v.name===x.partner)||CREATURES[0];page(`<div class="center"><div class="kicker">診断結果</div><h1>${x.code}</h1></div><section class="detailHead" style="--c:${x.color};--sub:${x.sub}"><div class="detailTitle">${x.name}</div><div class="subline">${x.title}<br>${x.line}</div></section>${sheet(x)}<section class="detailHead" style="--c:${c.color};--sub:${c.sub};margin-top:16px"><div class="no">心の中の不思議生命体</div><div class="detailTitle">${c.name}</div><div class="subline">${c.title}<br>${c.line}</div>${draw(c)}</section><button class="main" onclick="home()">トップへ戻る</button><button onclick="showZukan('animals')">図鑑を見る</button>`)}
 home();
